@@ -1,7 +1,9 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+
 
 @api_view(["GET"])
 def hello_world(_):
@@ -27,3 +29,19 @@ def login(request):
         })
     
     return Response({"error": "Invalid credentials"}, status=401)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    try:
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response({"error": "Refresh token is required"}, status=400)
+
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+
+        return Response({"message": "Logout successful"}, status=200)
+    except Exception as error:
+        return Response({"error": "Invalid token or logout failed"}, status=400)
