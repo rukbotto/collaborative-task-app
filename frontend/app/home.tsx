@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import LogoutButton from '@/components/LogoutButton';
 
 export default function HomeScreen() {
   return (
@@ -8,11 +9,10 @@ export default function HomeScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Juan's Tasks</Text>
-          <Text style={styles.date}>Wednesday, 09 May</Text>
-          <TouchableOpacity style={styles.logoutButton}>
-            <Ionicons name="log-out-outline" size={16} color="#000" />
-            <Text style={styles.logoutText}>Log out</Text>
-          </TouchableOpacity>
+          <Text style={styles.date}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', day: '2-digit', month: 'long' })}
+          </Text>
+          <LogoutButton />
         </View>
 
         <View style={styles.searchContainer}>
@@ -68,25 +68,6 @@ const styles = StyleSheet.create({
     color: '#ACACAC',
     marginVertical: 5,
   },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    borderColor: '#C7CACD',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: '#FFF',
-  },
-  logoutText: {
-    color: '#000',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   searchContainer: {
     marginBottom: 30,
   },
@@ -136,7 +117,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    // marginTop: 0,
   },
   emptyText: {
     fontSize: 16,
