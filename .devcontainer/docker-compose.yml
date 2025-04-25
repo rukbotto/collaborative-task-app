@@ -14,6 +14,7 @@ services:
       POSTGRES_USER: app_user
       POSTGRES_PASSWORD: app_password
       POSTGRES_DB: app_db
+      DJANGO_SECRET_KEY: "g+52)a(_r19$!t0kd^qzpw__-l!0-s#yq2fzg-+ei23v2tm&&%"
     networks:
       - dev-network
 
