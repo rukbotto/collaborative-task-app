@@ -14,9 +14,9 @@ export default function PasswordInput({ password, setPassword, onError }: Passwo
   const validatePassword = (text: string) => {
     let error = '';
     if (!text) {
-      error = 'Password is required.';
+      error = 'Password is required';
     } else if (text.length < 8) {
-      error = 'Password must be at least 8 characters long.';
+      error = 'Password must be at least 8 characters long';
     }
     setError(error);
     onError(error);
@@ -37,7 +37,7 @@ export default function PasswordInput({ password, setPassword, onError }: Passwo
         value={password}
         onChangeText={(text) => {
           setPassword(text);
-          setHasMinChars(text.length >= 3);
+          setHasMinChars(text.length >= 1);
           validatePassword(text);
         }}
       />

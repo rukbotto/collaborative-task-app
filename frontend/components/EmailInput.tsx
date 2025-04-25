@@ -14,9 +14,9 @@ export default function EmailInput({ email, setEmail, onError }: EmailInputProps
   const validateEmail = (text: string) => {
     let error = '';
     if (!text) {
-      error = 'Email is required.';
+      error = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(text)) {
-      error = 'Enter a valid email address.';
+      error = 'Enter a valid email address';
     }
     setError(error);
     onError(error);
@@ -34,6 +34,7 @@ export default function EmailInput({ email, setEmail, onError }: EmailInputProps
         style={[styles.inputField, hasMinChars && error ? styles.inputError : null]}
         placeholder="Your email"
         keyboardType="email-address"
+        autoCapitalize="none"
         value={email}
         onChangeText={(text) => {
           setEmail(text);
