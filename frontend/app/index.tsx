@@ -3,11 +3,13 @@ import PasswordInput from '@/components/PasswordInput';
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router'; 
+import * as SecureStore from 'expo-secure-store';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({ email: '', password: '' });
+  const [serverError, setServerError] = useState('');
   const router = useRouter();
 
   const validateFields = () => {
@@ -18,11 +20,38 @@ export default function LoginScreen() {
     return isValid;
   };
 
-  const handleLogin = () => {
-    if (validateFields()) {
-      // Proceed with login logic
-      console.log('Login successful');
-      router.push('/home');
+  const handleLogin = async () => {
+    if (!validateFields()) {
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:8000/api/login/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.access && data.refresh) {
+          // Store tokens securely
+          await SecureStore.setItemAsync('accessToken', data.access);
+          await SecureStore.setItemAsync('refreshToken', data.refresh);
+          
+          console.log('Login successful');
+          router.push('/home');
+        }
+      } else if (data.error) {
+        setServerError(data.error);
+      } else {
+        setServerError('An unexpected error occurred. Please try again');
+      }
+    } catch (error) {
+      setServerError('Failed to connect to the server. Please try again later');
     }
   };
 
@@ -35,6 +64,8 @@ export default function LoginScreen() {
       <Text style={styles.title}>
         Your tasks collaboration starts with <Text style={styles.highlight}>Collaby</Text>.
       </Text>
+
+      {serverError ? <Text style={styles.serverErrorMsg}>{serverError}</Text> : null}
 
       <EmailInput
         email={email}
@@ -128,5 +159,11 @@ const styles = StyleSheet.create({
   signUp: {
     color: '#007BFF',
     fontWeight: 'bold',
+  },
+  serverErrorMsg: {
+    color: '#F97272',
+    fontSize: 14,
+    marginBottom: 30,
+    textAlign: 'center',
   },
 });
