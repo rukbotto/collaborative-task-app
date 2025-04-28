@@ -61,8 +61,8 @@ def logout(request):
 
 
 class TaskPagination(PageNumberPagination):
-    page_size = 5
-    max_page_size = 5
+    page_size = 25
+    max_page_size = 25
 
 
 class TasksView(ListCreateAPIView):
