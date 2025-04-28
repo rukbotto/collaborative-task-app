@@ -71,7 +71,14 @@ class TasksView(ListCreateAPIView):
     - GET: Retrieve a paginated list of tasks.
     - POST: Create a new task using the JSON data sent in the request.
     """
-    queryset = Task.objects.all().order_by('-start_date')
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = TaskPagination
+
+    def get_queryset(self):
+        # Filter tasks to only include those created by the authenticated user
+        return Task.objects.filter(created_by=self.request.user).order_by('start_date')
+
+    def perform_create(self, serializer):
+        # Associate the task with the currently authenticated user
+        serializer.save(created_by=self.request.user)
