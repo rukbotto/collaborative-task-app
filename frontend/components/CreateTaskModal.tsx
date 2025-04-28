@@ -7,6 +7,7 @@ import LabeledDatePickerInput from '@/components/LabeledDatePickerInput';
 import DateSpinner from '@/components/DateSpinner';
 import { parse } from 'date-fns';
 import * as SecureStore from 'expo-secure-store';
+import { useRouter } from 'expo-router'; 
 
 interface CreateTaskModalProps {
   slideAnim: Animated.Value;
@@ -23,6 +24,8 @@ export default function CreateTaskModal({ slideAnim, isModalVisible, onClose }: 
   
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDateField, setSelectedDateField] = useState<'start' | 'end' | null>(null);
+
+  const router = useRouter();
 
   const validateFields = () => {
     let isValid = true;
@@ -56,14 +59,25 @@ export default function CreateTaskModal({ slideAnim, isModalVisible, onClose }: 
         body: JSON.stringify(requestData),
       });
 
-      const responseData = await response.json();
+      const data = await response.json();
       
       if (response.ok) {
         // Task created successfully
         alert('Task created successfully!');
         onClose();
+      } else if (response.status === 401) {
+        console.error('Unauthorized. Please log in again.');
+        // Handle unauthorized access (e.g., redirect to login)
+        setTitle('');
+        setDescription('');
+        setStartDate('');
+        setEndDate('');
+        setErrors({ title: '', description: '', startDate: '', endDate: '' });
+        setShowDatePicker(false);
+        setSelectedDateField(null);
+        router.replace('/');
       } else {
-        console.error(`Error creating task: ${JSON.stringify(responseData)}`);
+        console.error(`Error creating task: ${JSON.stringify(data)}`);
         alert('Failed to create task. Please try again.');
       }
     } catch (error) {
