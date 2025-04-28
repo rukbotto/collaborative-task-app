@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -65,7 +65,7 @@ class TaskPagination(PageNumberPagination):
     max_page_size = 25
 
 
-class TasksView(ListCreateAPIView):
+class TaskListView(ListCreateAPIView):
     """
     Handle tasks:
     - GET: Retrieve a paginated list of tasks.
@@ -82,3 +82,18 @@ class TasksView(ListCreateAPIView):
     def perform_create(self, serializer):
         # Associate the task with the currently authenticated user
         serializer.save(created_by=self.request.user)
+
+
+class TaskDetailView(RetrieveUpdateAPIView):
+    """
+    Handle a single task:
+    - GET: Retrieve the details of a specific task.
+    - PUT/PATCH: Update the details of a specific task.
+    """
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Ensure the user can only access their own tasks
+        return Task.objects.filter(created_by=self.request.user)
+    
