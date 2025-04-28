@@ -1,11 +1,82 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Animated } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Animated, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import LogoutButton from '@/components/LogoutButton';
 import CreateTaskModal from '@/components/CreateTaskModal';
+import TaskCard from '@/components/TaskCard';
+import * as SecureStore from 'expo-secure-store';
+import { useRouter } from 'expo-router'; 
+
+type TaskResult = {
+  id: number;
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  created_by: number;
+  assigned_to: number;
+};
+
+type Task = {
+  id: number;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  isCompleted: boolean;
+};  
 
 export default function HomeScreen() {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalVisible, setModalVisible] = useState(false);
+  const router = useRouter();
+  
+  useEffect(() => {
+    // Fetch tasks from the backend
+    const fetchTasks = async () => {
+      try {
+        const accessToken = await SecureStore.getItemAsync('accessToken');
+
+        const response = await fetch(
+          'http://localhost:8000/api/tasks/', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const results = data.results as TaskResult[];
+          console.log('Fetched tasks:', results);
+          const tasks = results.map((result) => ({
+            id: result.id,
+            title: result.title,
+            description: result.description,
+            startDate: new Date(result.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            endDate: new Date(result.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            isCompleted: false,
+            }));
+          setTasks(tasks);
+        } else if (response.status === 401) {
+          console.error('Unauthorized. Please log in again.');
+          // Handle unauthorized access (e.g., redirect to login)
+          setTasks([]);
+          router.replace('/');
+        } else {
+          console.error(`Error fetching tasks: ${JSON.stringify(data)}`);
+          setTasks([]);
+        }
+      } catch (error) {
+        console.error(`Error fetching tasks: ${error}`);
+      }
+    };
+
+    fetchTasks();
+  }, []);
 
   // Initial position off-screen
   const slideAnim = useRef(new Animated.Value(500)).current;
@@ -55,11 +126,31 @@ export default function HomeScreen() {
           <Text style={styles.tab}>Completed tasks</Text>
         </View>
 
-        <View style={styles.emptyState}>
-          <Ionicons name="list-outline" size={128} color="#C7CACD" />
-          <Text style={styles.emptyText}>
-            Just Press <Text style={styles.boldText}>“Create a Task”</Text> and start collaborating.
-          </Text>
+        <View style={styles.listContainer}>
+          {tasks.length > 0 ? (
+            <FlatList
+              data={tasks}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TaskCard
+                  title={item.title.length > 38 ? `${item.title.slice(0, 38)}...` : item.title}
+                  description={item.description.length > 38 ? `${item.description.slice(0, 38)}...` : item.description}
+                  startDate={item.startDate}
+                  endDate={item.endDate}
+                  completed={item.isCompleted}
+                  onToggleComplete={() => {}}
+                />
+              )}
+              contentContainerStyle={styles.list}
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="list-outline" size={128} color="#C7CACD" />
+              <Text style={styles.emptyText}>
+              Just Press <Text style={styles.boldText}>“Create a Task”</Text> and start collaborating.
+              </Text>
+            </View>
+          )}
         </View>
 
         <TouchableOpacity style={styles.createTaskButton} onPress={openModal}>
@@ -165,5 +256,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  listContainer: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+    paddingVertical: 15,
+  },
+  list: {
+    paddingBottom: 15,
   },
 });
