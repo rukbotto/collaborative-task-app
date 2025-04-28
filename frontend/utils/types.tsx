@@ -14,6 +14,7 @@ export type TaskResult = {
   description: string;
   start_date: string;
   end_date: string;
+  completed: boolean;
   created_by: number;
   assigned_to: number;
 };

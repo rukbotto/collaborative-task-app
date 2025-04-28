@@ -40,7 +40,7 @@ export default function HomeScreen() {
             description: result.description,
             startDate: new Date(result.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             endDate: new Date(result.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            isCompleted: false,
+            isCompleted: result.completed,
           }));
           setTasks(tasks);
         } else if (response.status === 401) {
@@ -59,6 +59,39 @@ export default function HomeScreen() {
 
     fetchTasks();
   }, []);
+
+  const toggleTaskCompletion = async (taskId: number) => {
+    try {
+      const accessToken = await SecureStore.getItemAsync('accessToken');
+      const isTaskCompleted = !tasks.find((task) => task.id === taskId)?.isCompleted;
+
+      const response = await fetch(`http://localhost:8000/api/tasks/${taskId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ completed: isTaskCompleted }),
+      });
+
+      if (response.ok) {
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task.id === taskId ? { ...task, isCompleted: !task.isCompleted } : task
+          )
+        );
+      } else if (response.status === 401) {
+        console.error('Unauthorized. Please log in again.');
+        // Handle unauthorized access (e.g., redirect to login)
+        setTasks([]);
+        router.replace('/');
+      } else {
+        console.error(`Failed to update task: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error(`Error updating task: ${error}`);
+    }
+  };
 
   // Initial position off-screen
   const slideAnim = useRef(new Animated.Value(500)).current;
@@ -120,7 +153,7 @@ export default function HomeScreen() {
                   startDate={item.startDate}
                   endDate={item.endDate}
                   completed={item.isCompleted}
-                  onToggleComplete={() => {}}
+                  onToggleComplete={() => toggleTaskCompletion(item.id)}
                 />
               )}
               contentContainerStyle={styles.list}
