@@ -42,7 +42,8 @@ Follow the steps below in order to bring up the backend and run the React Native
 
 ### General
 
-1. Clone this repository
+1. Install Git
+2. Clone this repository by running: `git clone https://github.com/rukbotto/collaborative-task-app.git`.
 
 ### Backend
 
