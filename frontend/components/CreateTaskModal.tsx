@@ -6,14 +6,15 @@ import LabeledTextInput from '@/components/LabeledTextInput';
 import LabeledDatePickerInput from '@/components/LabeledDatePickerInput';
 import DateSpinner from '@/components/DateSpinner';
 import { parse } from 'date-fns';
+import * as SecureStore from 'expo-secure-store';
 
-interface AddTaskModalProps {
+interface CreateTaskModalProps {
   slideAnim: Animated.Value;
   isModalVisible: boolean;
   onClose: () => void;
 }
 
-export default function AddTaskModal({ slideAnim, isModalVisible, onClose }: AddTaskModalProps) {
+export default function CreateTaskModal({ slideAnim, isModalVisible, onClose }: CreateTaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -34,6 +35,48 @@ export default function AddTaskModal({ slideAnim, isModalVisible, onClose }: Add
   const handleCreateTask = async () => {
     if (!validateFields()) {
       return;
+    }
+
+    try {
+      const accessToken = await SecureStore.getItemAsync('accessToken');
+      
+      const requestData = {
+        title,
+        description,
+        start_date: startDate,
+        end_date: endDate,
+      };
+  
+      const response = await fetch('http://localhost:8000/api/tasks/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const responseData = await response.json();
+      
+      if (response.ok) {
+        // Task created successfully
+        alert('Task created successfully!');
+        onClose();
+      } else {
+        console.error(`Error creating task: ${JSON.stringify(responseData)}`);
+        alert('Failed to create task. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating task:', error);
+      alert('Failed to create task. Please try again.');
+    } finally {
+      setTitle('');
+      setDescription('');
+      setStartDate('');
+      setEndDate('');
+      setErrors({ title: '', description: '', startDate: '', endDate: '' });
+      setShowDatePicker(false);
+      setSelectedDateField(null);
     }
   };
 

@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import LogoutButton from '@/components/LogoutButton';
-import AddTaskModal from '@/components/AddTaskModal';
+import CreateTaskModal from '@/components/CreateTaskModal';
 
 export default function HomeScreen() {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -66,7 +66,7 @@ export default function HomeScreen() {
           <Text style={styles.createTaskText}>Create a Task</Text>
         </TouchableOpacity>
 
-        <AddTaskModal slideAnim={slideAnim} isModalVisible={isModalVisible} onClose={closeModal} />
+        <CreateTaskModal slideAnim={slideAnim} isModalVisible={isModalVisible} onClose={closeModal} />
       </View>
     </SafeAreaView>
   );
