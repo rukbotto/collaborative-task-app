@@ -6,25 +6,7 @@ import CreateTaskModal from '@/components/CreateTaskModal';
 import TaskCard from '@/components/TaskCard';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router'; 
-
-type TaskResult = {
-  id: number;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  created_by: number;
-  assigned_to: number;
-};
-
-type Task = {
-  id: number;
-  title: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  isCompleted: boolean;
-};  
+import { Task, TaskResult } from '../utils/types';
 
 export default function HomeScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -59,7 +41,7 @@ export default function HomeScreen() {
             startDate: new Date(result.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             endDate: new Date(result.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             isCompleted: false,
-            }));
+          }));
           setTasks(tasks);
         } else if (response.status === 401) {
           console.error('Unauthorized. Please log in again.');
@@ -157,7 +139,7 @@ export default function HomeScreen() {
           <Text style={styles.createTaskText}>Create a Task</Text>
         </TouchableOpacity>
 
-        <CreateTaskModal slideAnim={slideAnim} isModalVisible={isModalVisible} onClose={closeModal} />
+        <CreateTaskModal slideAnim={slideAnim} isModalVisible={isModalVisible} setTasks={setTasks} onClose={closeModal} />
       </View>
     </SafeAreaView>
   );

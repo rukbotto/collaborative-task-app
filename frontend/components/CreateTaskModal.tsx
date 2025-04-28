@@ -8,14 +8,16 @@ import DateSpinner from '@/components/DateSpinner';
 import { parse } from 'date-fns';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router'; 
+import { Task } from '@/utils/types';
 
 interface CreateTaskModalProps {
   slideAnim: Animated.Value;
   isModalVisible: boolean;
+  setTasks: (tasks: Task[] | ((prevTasks: Task[]) => Task[])) => void;
   onClose: () => void;
 }
 
-export default function CreateTaskModal({ slideAnim, isModalVisible, onClose }: CreateTaskModalProps) {
+export default function CreateTaskModal({ slideAnim, isModalVisible, setTasks, onClose }: CreateTaskModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -34,6 +36,16 @@ export default function CreateTaskModal({ slideAnim, isModalVisible, onClose }: 
     }
     return isValid;
   };
+
+  const resetState = () => {
+    setTitle('');
+    setDescription('');
+    setStartDate('');
+    setEndDate('');
+    setErrors({ title: '', description: '', startDate: '', endDate: '' });
+    setShowDatePicker(false);
+    setSelectedDateField(null);
+  }
 
   const handleCreateTask = async () => {
     if (!validateFields()) {
@@ -63,18 +75,20 @@ export default function CreateTaskModal({ slideAnim, isModalVisible, onClose }: 
       
       if (response.ok) {
         // Task created successfully
-        alert('Task created successfully!');
+        const task: Task = {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          startDate: new Date(data.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          endDate: new Date(data.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          isCompleted: false,
+        }
+        setTasks((prevTasks) => [task, ...prevTasks]);
         onClose();
       } else if (response.status === 401) {
         console.error('Unauthorized. Please log in again.');
         // Handle unauthorized access (e.g., redirect to login)
-        setTitle('');
-        setDescription('');
-        setStartDate('');
-        setEndDate('');
-        setErrors({ title: '', description: '', startDate: '', endDate: '' });
-        setShowDatePicker(false);
-        setSelectedDateField(null);
+        resetState();
         router.replace('/');
       } else {
         console.error(`Error creating task: ${JSON.stringify(data)}`);
@@ -84,13 +98,7 @@ export default function CreateTaskModal({ slideAnim, isModalVisible, onClose }: 
       console.error('Error creating task:', error);
       alert('Failed to create task. Please try again.');
     } finally {
-      setTitle('');
-      setDescription('');
-      setStartDate('');
-      setEndDate('');
-      setErrors({ title: '', description: '', startDate: '', endDate: '' });
-      setShowDatePicker(false);
-      setSelectedDateField(null);
+      resetState();
     }
   };
 
