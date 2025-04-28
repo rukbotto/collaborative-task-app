@@ -1,11 +1,15 @@
+from django.contrib.auth import authenticate
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.generics import ListCreateAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
-from rest_framework import status
 
 from .serializers import TaskSerializer
+from .models import Task
 
 
 @api_view(["GET"])
@@ -54,22 +58,20 @@ def logout(request):
             {"error": "Invalid token or logout failed"},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def add_task(request):
+
+class TaskPagination(PageNumberPagination):
+    page_size = 5
+    max_page_size = 5
+
+
+class TasksView(ListCreateAPIView):
     """
-    Create a new task using the JSON data sent in the request.
+    Handle tasks:
+    - GET: Retrieve a paginated list of tasks.
+    - POST: Create a new task using the JSON data sent in the request.
     """
-    serializer = TaskSerializer(data=request.data)
-    
-    if serializer.is_valid():
-        # Save the task
-        task = serializer.save()
-        return Response(
-            TaskSerializer(task).data,
-            status=status.HTTP_201_CREATED
-        )
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    queryset = Task.objects.all().order_by('-start_date')
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = TaskPagination
