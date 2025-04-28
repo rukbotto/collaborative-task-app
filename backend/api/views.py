@@ -3,6 +3,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+from rest_framework import status
+
+from .serializers import TaskSerializer
 
 
 @api_view(["GET"])
@@ -28,7 +31,7 @@ def login(request):
             "access": str(refresh.access_token),
         })
     
-    return Response({"error": "Invalid credentials"}, status=401)
+    return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(["POST"])
@@ -37,11 +40,36 @@ def logout(request):
     try:
         refresh_token = request.data.get("refresh")
         if not refresh_token:
-            return Response({"error": "Refresh token is required"}, status=400)
+            return Response(
+                {"error": "Refresh token is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         token = RefreshToken(refresh_token)
         token.blacklist()
 
-        return Response({"message": "Logout successful"}, status=200)
+        return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
     except Exception as error:
-        return Response({"error": "Invalid token or logout failed"}, status=400)
+        return Response(
+            {"error": "Invalid token or logout failed"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_task(request):
+    """
+    Create a new task using the JSON data sent in the request.
+    """
+    serializer = TaskSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        # Save the task
+        task = serializer.save()
+        return Response(
+            TaskSerializer(task).data,
+            status=status.HTTP_201_CREATED
+        )
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
