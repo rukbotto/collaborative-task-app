@@ -38,6 +38,8 @@ A simple mobile app to manage shared tasks for planning with a Django backend an
 
 ## Development Setup
 
+Follow the steps below in order to bring up the backend and run the React Native app inside the iOS simulator:
+
 ### General
 
 1. Clone this repository
