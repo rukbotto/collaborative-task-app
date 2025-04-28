@@ -1,9 +1,35 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, SafeAreaView, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import LogoutButton from '@/components/LogoutButton';
+import AddTaskModal from '@/components/AddTaskModal';
 
 export default function HomeScreen() {
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  // Initial position off-screen
+  const slideAnim = useRef(new Animated.Value(500)).current;
+
+  const openModal = () => {
+    setModalVisible(true);
+
+    // Slide to the top
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeModal = () => {
+    // Slide back down
+    Animated.timing(slideAnim, {
+      toValue: 500,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => setModalVisible(false));
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -36,10 +62,11 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        {/* Create Task Button */}
-        <TouchableOpacity style={styles.createTaskButton}>
+        <TouchableOpacity style={styles.createTaskButton} onPress={openModal}>
           <Text style={styles.createTaskText}>Create a Task</Text>
         </TouchableOpacity>
+
+        <AddTaskModal slideAnim={slideAnim} isModalVisible={isModalVisible} onClose={closeModal} />
       </View>
     </SafeAreaView>
   );

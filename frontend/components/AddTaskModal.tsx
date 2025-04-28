@@ -1,0 +1,158 @@
+import React, { useState } from 'react';
+import { Modal, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import LabeledTextInput from '@/components/LabeledTextInput';
+import LabeledDatePickerInput from '@/components/LabeledDatePickerInput';
+import DateSpinner from '@/components/DateSpinner';
+import { parse } from 'date-fns';
+
+interface AddTaskModalProps {
+  slideAnim: Animated.Value;
+  isModalVisible: boolean;
+  onClose: () => void;
+}
+
+export default function AddTaskModal({ slideAnim, isModalVisible, onClose }: AddTaskModalProps) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [errors, setErrors] = useState({ title: '', description: '', startDate: '', endDate: '' });
+  
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDateField, setSelectedDateField] = useState<'start' | 'end' | null>(null);
+
+  const validateFields = () => {
+    let isValid = true;
+    if (errors.title || errors.description || errors.startDate || errors.endDate) {
+      isValid = false;
+    }
+    return isValid;
+  };
+
+  const handleCreateTask = async () => {
+    if (!validateFields()) {
+      return;
+    }
+  };
+
+  return (
+    <Modal transparent visible={isModalVisible} animationType="none">
+      <View style={styles.modalOverlay}>
+        <Animated.View style={[styles.modalContent, { transform: [{ translateY: slideAnim }] }]}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add new Task</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+          <LabeledTextInput
+            label='Title'
+            placeholder='Title for your task'
+            value={title}
+            required
+            setValue={setTitle}
+            onError={(error) => setErrors((prevErrors) => ({ ...prevErrors, title: error }))}
+          />
+          <LabeledTextInput
+            label='Description'
+            placeholder='Enter a description for your task'
+            value={description}
+            multiline
+            setValue={setDescription}
+            onError={(error) => setErrors((prevErrors) => ({ ...prevErrors, description: error }))}
+          />
+          <LabeledDatePickerInput
+            label="Start date"
+            placeholder="Start date (MM/DD/YYYY)"
+            value={startDate}
+            required
+            onPress={() => {
+              setSelectedDateField('start');
+              setShowDatePicker(true);
+            }}
+            onError={(error) => setErrors((prevErrors) => ({ ...prevErrors, startDate: error }))}
+          />
+          <LabeledDatePickerInput
+            label="End date"
+            placeholder="End date (MM/DD/YYYY)"
+            value={endDate}
+            onPress={() => {
+              setSelectedDateField('end');
+              setShowDatePicker(true);
+            }}
+            onError={(error) => setErrors((prevErrors) => ({ ...prevErrors, endDate: error }))}
+          />
+          <TouchableOpacity style={styles.modalButton} onPress={handleCreateTask}>
+            <Text style={styles.modalButtonText}>Create Task</Text>
+          </TouchableOpacity>
+
+          {showDatePicker && (
+            <DateSpinner
+              value={
+                selectedDateField === 'start' && startDate
+                  ? parse(startDate, 'MM/dd/yyyy', new Date())
+                  : selectedDateField === 'end' && endDate
+                    ? parse(endDate, 'MM/dd/yyyy', new Date())
+                    : new Date()
+              }
+              onChangeDate={(formattedDate) => {
+                if (selectedDateField === 'start') {
+                  setStartDate(formattedDate);
+                } else if (selectedDateField === 'end') {
+                  setEndDate(formattedDate);
+                }
+              }}
+              onClose={() => setShowDatePicker(false)}
+            />
+          )}
+        </Animated.View>
+      </View>
+    </Modal>
+  )
+}
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#C7CACD',
+    borderRadius: 8,
+    padding: 15,
+    marginBottom: 9,
+    backgroundColor: '#FFF',
+  },
+  modalButton: {
+    backgroundColor: '#007BFF',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
